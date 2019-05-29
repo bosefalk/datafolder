@@ -12,7 +12,7 @@ datafolder_update(docs_folder = "docs", data_folder = "data")
 \item{data_folder}{data folder path}
 }
 \value{
-Nothing, writes docs/data_folder_content.csv directly
+Nothing, writes docs/data_folder_content.csv directly. This csv has two columns, \code{filepath}, and \code{md5}
 }
 \description{
 Creates the docs/data_folder_content.csv file which can be synced to git, and used by \code{\link{datafolder_check}} to make sure the

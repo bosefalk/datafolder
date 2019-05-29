@@ -2,7 +2,7 @@
 
 ### Description
 
-This is intended as a light-weight solution to the following problem: You can sync code to a git remote, but do not want to sync the actual data. It creates a list of the contents of a data subfolder, writes this to a csv file which can be synced to git remotes, with functions to check for mismatches between this .csv and the actual data folder contents.
+This R package is intended as a light-weight solution to the following problem: You can sync code to a git remote, but do not want to sync the actual data. It creates a list of the contents of a data subfolder, writes this to a csv file which can be synced to git remotes, with functions to check for mismatches between this .csv and the actual data folder contents.
 
 ### Overview
 

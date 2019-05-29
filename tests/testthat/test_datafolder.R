@@ -1,6 +1,5 @@
 context("Testing data folder content checks")
 library(testthat)
-library(openssl)
 
 old_wd <- getwd()
 
@@ -37,9 +36,9 @@ write.csv(
 )
 
 # Create a data_folder_content matching these files
-datafiles <- data.frame(path = list.files("data", recursive = TRUE), stringsAsFactors = FALSE)
+datafiles <- data.frame(filepath = list.files("data", recursive = TRUE), stringsAsFactors = FALSE)
 for (i in 1:nrow(datafiles)) {
-  datafiles$md5[i] <- as.character(openssl::md5(file(paste0("data/", datafiles$path[i]))))
+  datafiles$md5[i] <- as.character(openssl::md5(file(paste0("data/", datafiles$filepath[i]))))
 
 }
 write.csv(
@@ -85,7 +84,7 @@ test_that("Correctly identify missing, changed and renamed files in updated docs
   write.csv(fileA, tmp_fileA, row.names = FALSE)
   fileA_newmd5 <- as.character(openssl::md5(file(tmp_fileA)))
   data_folder_content <- read.csv("docs/data_folder_content.csv", stringsAsFactors = FALSE)
-  data_folder_content$md5[data_folder_content$path == "fileA.csv"] <- fileA_newmd5
+  data_folder_content$md5[data_folder_content$filepath == "fileA.csv"] <- fileA_newmd5
   write.csv(
     data_folder_content,
     file = "docs/data_folder_content.csv",
@@ -100,7 +99,7 @@ test_that("Correctly identify missing, changed and renamed files in updated docs
   # Renamed files, rename fileC.csv to fileX.csv in data_folder_content
   copy_baseloc()
   data_folder_content <- read.csv("docs/data_folder_content.csv", stringsAsFactors = FALSE)
-  data_folder_content$path[3] <- "subdir/fileX.csv"
+  data_folder_content$filepath[3] <- "subdir/fileX.csv"
   write.csv(
     data_folder_content,
     file = "docs/data_folder_content.csv",
@@ -124,9 +123,9 @@ test_that("Correctly identify missing, changed and renamed files in updated docs
   write.csv(fileA, tmp_fileA, row.names = FALSE)
   fileA_newmd5 <- as.character(openssl::md5(file(tmp_fileA)))
   data_folder_content <- read.csv("docs/data_folder_content.csv", stringsAsFactors = FALSE)
-  data_folder_content$md5[data_folder_content$path == "fileA.csv"] <- fileA_newmd5
+  data_folder_content$md5[data_folder_content$filepath == "fileA.csv"] <- fileA_newmd5
 
-  data_folder_content$path[3] <- "subdir/fileX.csv"
+  data_folder_content$filepath[3] <- "subdir/fileX.csv"
 
   write.csv(
     data_folder_content,
@@ -214,10 +213,10 @@ test_that("If there are too many different files, open a tempfile with list inst
 
   # 20 new files listed in .csv
   copy_baseloc()
-  new_dfc <- data.frame(path = replicate(20, tempfile(tmpdir = "", fileext = ".csv")),
+  new_dfc <- data.frame(filepath = replicate(20, tempfile(tmpdir = "", fileext = ".csv")),
                         md5 = replicate(20, as.character(openssl::md5(tempfile()))),
                         stringsAsFactors = FALSE)
-  new_dfc$path <- gsub("/", "", new_dfc$path)
+  new_dfc$filepath <- gsub("/", "", new_dfc$filepath)
   data_folder_content <- read.csv("docs/data_folder_content.csv", stringsAsFactors = FALSE)
   data_folder_content <- rbind(data_folder_content, new_dfc)
   write.csv(
@@ -238,10 +237,10 @@ test_that("If there are too many different files, open a tempfile with list inst
 
   # 10 files added to data folder and 10 new entries added to .csv
   copy_baseloc()
-  new_dfc <- data.frame(path = replicate(10, tempfile(tmpdir = "", fileext = ".csv")),
+  new_dfc <- data.frame(filepath = replicate(10, tempfile(tmpdir = "", fileext = ".csv")),
                         md5 = replicate(10, as.character(openssl::md5(tempfile()))),
                         stringsAsFactors = FALSE)
-  new_dfc$path <- gsub("/", "", new_dfc$path)
+  new_dfc$filepath <- gsub("/", "", new_dfc$filepath)
   data_folder_content <- read.csv("docs/data_folder_content.csv", stringsAsFactors = FALSE)
   data_folder_content <- rbind(data_folder_content, new_dfc)
   write.csv(
@@ -325,7 +324,7 @@ test_that("datafolder_check() handles missing expected inputs", {
   expect_error(datafolder_check(), "path or md5 column in docs/data_folder_content.csv not read as character strings")
 
   data_folder_content <- good_dfc
-  data_folder_content$path <- NA_character_
+  data_folder_content$filepath <- NA_character_
   write.csv(
     data_folder_content,
     file = "docs/data_folder_content.csv",
@@ -334,7 +333,7 @@ test_that("datafolder_check() handles missing expected inputs", {
   expect_error(datafolder_check(), "path or md5 column in docs/data_folder_content.csv not read as character strings")
 
   data_folder_content <- good_dfc
-  data_folder_content$path <- NULL
+  data_folder_content$filepath <- NULL
   write.csv(
     data_folder_content,
     file = "docs/data_folder_content.csv",
@@ -413,3 +412,5 @@ test_that("datafolder_update can handle non-default locations", {
 
 # Return to the original working directory after the tests have been carried out
 setwd(old_wd)
+detach("package:testthat")
+
