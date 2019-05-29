@@ -1,9 +1,11 @@
 Package: datafolder
-Title: What the Package Does (one line, title case)
+Title: Create list of files in data/ folder to sync to git
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R: person("Bose", "Falk", email = "falk@dkms.de", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
-Depends: R (>= 3.4.4)
+Depends:
+  dplyr, 
+  openssl
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
