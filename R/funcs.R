@@ -1,20 +1,20 @@
 #' Check local data folder is up-to-date
 #'
-#' We don't want to sync the actual data to git remotes. Instead, the data folder should be manually copied in whichever way is safe to do so,
-#' and there should be a list in docs/data_folder_content.csv with a list of the files expected in data/, and their md5 checksums.
-#' This .csv is synced to git, so we can check against it at the start of every analysis script that the actual files in the data
-#' folder on this machine matches what the rest of the code expects to be there. This is what this function does - compares
+#' We don't want to sync the actual data to git remotes. Instead, we list the files expected in the data/ subfolder in docs/data_folder_content.csv
+#' with their md5 checksums.
+#' This .csv should be synced to git, and this function run when git pulling, to see if the actual data folder needs updating. This function compares
 #' docs/data_folder_content.csv to the actual contents in data/, and outputs an error or warning if things are not matching, with a list
 #' of mismatches.
 #'
-#' @param stop_on_error if TRUE, stops execution with an error message when a file is listed in data_folder_content.csv but doesn't match
-#' the contents of data/. If set to FALSE, instead outputs a warning and continues execution of the code.
+#' @param stop_on_error if TRUE (default), stops execution with an error message when a file is listed in data_folder_content.csv but doesn't match
+#' the contents of the data folder. If set to FALSE, instead outputs a warning and continues execution of the code.
+#' @param data_folder data folder path
+#' @param docs_folder subfolder where the data_folder_content.csv file is located. Currently cannot be the working directory root.
+#'
 #'
 #' @details The md5 checksum is created using \code{openssl::md5(file(<filename>))}
 #'
-#' Generating docs/data_folder_content.csv is done using \code{\link{datafolder_update}}
-#'
-#' \code{tests/testthat/test_data_folder_content.R} has a large number of tests for different combinations of updates and examples of the messages
+#' Generating or updating docs/data_folder_content.csv is done using \code{\link{datafolder_update}}
 #'
 #' @return If no mismatches has been found, returns nothing. If a mismatch is found an error or warning is raised, with a message listing
 #'  the files which are missing, changed, renamed, or are new in the data folder and not yet recorded. If the number of files to list is >15
@@ -24,7 +24,12 @@
 datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_folder = "data") {
 
   # Check workspace is as expected
-  if (any(!c(docs_folder, data_folder) %in% list.files(recursive = TRUE, include.dirs = TRUE))) {stop("Missing data and / or docs folder")}
+  if (!docs_folder %in% list.files(recursive = TRUE, include.dirs = TRUE)) {
+    stop("Missing ", docs_folder, " folder")
+  }
+  if (!data_folder %in% list.files(recursive = TRUE, include.dirs = TRUE)) {
+    stop("Missing ", data_folder, " folder")
+  }
 
   if (!file.exists(file.path(docs_folder, "data_folder_content.csv"))) {
     stop(paste0(file.path(docs_folder, "data_folder_content.csv"), " does not exist so no checking is done,
@@ -32,7 +37,7 @@ datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_fo
   }
 
   if (length(list.files(data_folder)) == 0) {
-    stop("data folder is empty, exiting datafolder_check()")
+    stop(data_folder, " folder is empty, exiting datafolder_check()")
   }
 
   # Check data_folder_content.csv is as expected
@@ -42,6 +47,8 @@ datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_fo
     stop(paste("path or md5 column missing from", file.path(docs_folder, "data_folder_content.csv")))
   }
 
+  # If it's not by default read as character strings something is wrong with the input file, which is why character types
+  # are not defined at csv read-in
   if (class(data_folder_content$path) != "character" | class(data_folder_content$md5) != "character") {
     stop(paste("path or md5 column in", file.path(docs_folder, "data_folder_content.csv"), "not read as character strings"))
   }
@@ -151,31 +158,38 @@ datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_fo
 
 #' Save data folder content list to sync to git
 #'
-#' Creates the docs/data_folder_content.csv file which is synced to git, and used by \code{\link{datafolder_check}} to make sure the
+#' Creates the docs/data_folder_content.csv file which can be synced to git, and used by \code{\link{datafolder_check}} to make sure the
 #' local data folder is up-to-date with the rest of the code
+#'
+#' @param data_folder data folder path
+#' @param docs_folder subfolder where the data_folder_content.csv file is located. Currently cannot be the working directory root.
 #'
 #' @details The md5 checksum is created using \code{openssl::md5(file(<filename>))}
 #'
 #' @return Nothing, writes docs/data_folder_content.csv directly
 #'
 #' @seealso \code{\link{datafolder_check}}
-datafolder_update <- function() {
+datafolder_update <- function(docs_folder = "docs", data_folder = "data") {
 
   # Check workspace is as expected
-  if (any(!c("data", "docs") %in% list.files())) {stop("Missing data and / or docs folder")}
+  if (!docs_folder %in% list.files(recursive = TRUE, include.dirs = TRUE)) {
+    stop("Missing ", docs_folder, " folder")
+  }
+  if (!data_folder %in% list.files(recursive = TRUE, include.dirs = TRUE)) {
+    stop("Missing ", data_folder, " folder")
+  }
 
-  if (length(list.files("data")) == 0) {
-    warning("data folder is empty, exiting datafolder_update()")
-    return()
+  if (length(list.files(data_folder)) == 0) {
+    stop(data_folder, " folder is empty, exiting datafolder_check()")
   }
 
 
 
 
-  datafolder <- data.frame(path = list.files("data", recursive = TRUE), stringsAsFactors = FALSE)
+  datafolder <- data.frame(path = list.files(data_folder, recursive = TRUE), stringsAsFactors = FALSE)
   for (i in 1:nrow(datafolder)) {
-    datafolder$md5[i] <- as.character(openssl::md5(file(paste0("data/", datafolder$path[i]))))
+    datafolder$md5[i] <- as.character(openssl::md5(file(file.path(data_folder, datafolder$path[i]))))
 
   }
-  write.csv(datafolder, file = "docs/data_folder_content.csv", row.names = FALSE, fileEncoding = "UTF-8")
+  write.csv(datafolder, file = file.path(docs_folder, "data_folder_content.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 }

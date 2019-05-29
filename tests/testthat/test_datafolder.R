@@ -284,12 +284,12 @@ test_that("datafolder_check() handles missing expected inputs", {
   # No docs folder at all
   copy_baseloc()
   unlink("docs", recursive = TRUE)
-  expect_error(datafolder_check(), "Missing data and / or docs folder")
+  expect_error(datafolder_check(), "Missing docs folder")
 
   # No data folder
   copy_baseloc()
   unlink("data", recursive = TRUE)
-  expect_error(datafolder_check(), "Missing data and / or docs folder")
+  expect_error(datafolder_check(), "Missing data folder")
 
   # Empty data folder
   copy_baseloc()
@@ -398,9 +398,16 @@ test_that("accepts non-default data locations", {
 
 })
 
+test_that("datafolder_update can handle non-default locations", {
+  copy_baseloc()
+  file.remove("docs/data_folder_content.csv")
+  unlink("docs", recursive = TRUE)
+  dir.create("docsnew")
+  expect_error(datafolder_update())
+  datafolder_update(docs_folder = "docsnew")
+  expect_silent(datafolder_check(docs_folder = "docsnew"))
 
-
-
+})
 
 # Return from test environment --------------------------------------------
 
