@@ -90,7 +90,7 @@ datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_fo
   error_msg <- function(nf = new_files, cf = changed_files, rf = renamed_files) {
 
     error_string <- paste0("Missing or outdated files in ", data_folder,
-                           ":\nIf data folder is accurate run CTUtools::datafolder_update()\n")
+                           ":\nIf data folder is accurate run datafolder::datafolder_update()\n")
 
     if (nrow(nf) > 0) {
       error_string <- paste0(error_string, "New files:\n")
@@ -119,7 +119,7 @@ datafolder_check <- function(stop_on_error = TRUE, docs_folder = "docs", data_fo
 
   # New files appearing in the data folder
   if (nrow(data_new_files) > 0) {
-    dnf_string <- "New files appeared in data folder, run CTUtools::datafolder_update()\n"
+    dnf_string <- "New files appeared in data folder, run datafolder::datafolder_update()\n"
     dnf_string <- paste0(dnf_string, paste0(utils::capture.output(data_new_files), collapse = "\n"), "\n")
 
     if (exists("error_file")) {
